@@ -1,0 +1,107 @@
+<!doctype html>
+<canvas></canvas>
+<script>
+"use strict";
+const unit = 64;
+
+const canvas = document.getElementsByTagName("canvas")[0];
+canvas.width = unit * 6;
+canvas.height = unit * 26;
+
+const ctx = canvas.getContext("2d");
+const id = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+function lerp(a, b, x) {
+  return a + (b - a) * x;
+}
+
+const EA = new Uint8Array(256);
+const EB = new Uint8Array(256);
+const EC = new Uint8Array(256);
+
+function reset() {
+  crypto.getRandomValues(EA);
+  crypto.getRandomValues(EB);
+  crypto.getRandomValues(EC);
+}
+
+function octave(t, entropy) {
+  const x = Math.floor(t);
+  return lerp(entropy[x & 255], entropy[(x + 1) & 255], t - x) / 127.5 - 1;
+}
+
+function noise(t, entropy) {
+  return (32 / 63) * octave( 1 * t, entropy) +
+         (16 / 63) * octave( 2 * t, entropy) +
+         ( 8 / 63) * octave( 4 * t, entropy) +
+         ( 4 / 63) * octave( 8 * t, entropy) +
+         ( 2 / 63) * octave(16 * t, entropy) +
+         ( 1 / 63) * octave(32 * t, entropy);
+}
+
+function fade(t) {
+  return Math.sin(t * Math.PI) ** 0.25;
+}
+
+function arc(cx, cy, rx, ry, st, et) {
+  cx *= unit;
+  cy *= unit;
+  rx *= unit;
+  ry *= unit;
+  st *= Math.PI;
+  et *= Math.PI;
+
+  for(let i = 0; i < 1000; i++) {
+    const f = i / 1000;
+    const t = st + (et - st) * f;
+    const r = (unit / 14) * (1 + noise(t, EA) * fade(f) / 2);
+
+    const x = cx + Math.cos(t) * rx + noise(t, EB) * fade(f) * (unit / 14);
+    const y = cy + Math.sin(t) * ry + noise(t, EC) * fade(f) * (unit / 14);
+
+    const min_x = Math.floor(x - r);
+    const min_y = Math.floor(y - r);
+    const max_x = Math.ceil(x + r);
+    const max_y = Math.ceil(y + r);
+    for(let v = min_y; v < max_y; v++) {
+      for(let u = min_x; u < max_x; u++) {
+        if(Math.hypot(u - x, v - y) <= r) {
+          id.data[(v * id.width + u) * 4 + 0] = 0;
+          id.data[(v * id.width + u) * 4 + 1] = 0;
+          id.data[(v * id.width + u) * 4 + 2] = 0;
+          id.data[(v * id.width + u) * 4 + 3] = 255;
+        }
+      }
+    }
+  }
+}
+
+reset();
+arc(3, 1, 2, 2, 0, 1);
+arc(3, 1, 2, 1, 1, 0);
+
+reset();
+arc(3, 4, 2, 2, 0, 1);
+arc(3, 4, 2, 0, 1, 2);
+
+reset();
+arc(3, 8, 2, 2, 0, 1);
+arc(3, 8, 2, 1, 1, 2);
+
+reset();
+arc(3, 13, 2, 2, 0, 2);
+
+reset();
+arc(3, 18, 2, 1, 0, 1);
+arc(3, 18, 2, 2, 1, 2);
+
+reset();
+arc(3, 22, 2, 0, 0, 1);
+arc(3, 22, 2, 2, 1, 2);
+
+reset();
+arc(3, 25, 2, 1, 2, 1);
+arc(3, 25, 2, 2, 1, 2);
+
+ctx.putImageData(id, 0, 0);
+</script>
