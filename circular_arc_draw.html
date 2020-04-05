@@ -7,6 +7,34 @@ const HEIGHT = 26;
 const STROKE = 1/14;
 const SCALE = 24;
 
+
+const ENTROPY = new Uint8Array(256);
+
+function next() {
+  crypto.getRandomValues(ENTROPY);
+}
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+function octave(t) {
+  const x = Math.floor(t);
+  return lerp(ENTROPY[x & 255], ENTROPY[(x + 1) & 255], t - x) * (2 / 255) - 1;
+}
+
+function noise(t) {
+  return octave(t * (1 /   1) +  3) * (  1 / 255) +
+         octave(t * (1 /   2) +  5) * (  2 / 255) +
+         octave(t * (1 /   4) +  7) * (  4 / 255) +
+         octave(t * (1 /   8) + 11) * (  8 / 255) +
+         octave(t * (1 /  16) + 13) * ( 16 / 255) +
+         octave(t * (1 /  32) + 17) * ( 32 / 255) +
+         octave(t * (1 /  64) + 19) * ( 64 / 255) +
+         octave(t * (1 / 128) + 23) * (128 / 255);
+}
+
+
 const CANVAS = document.getElementsByTagName("canvas")[0];
 CANVAS.width = WIDTH * SCALE;
 CANVAS.height = HEIGHT * SCALE;
@@ -18,10 +46,10 @@ function constrain(x, min, max) {
   return (x > min)? ((x < max)? x: max): min;
 }
 
-function circle(x, y, r) {
-  x *= SCALE;
-  y *= SCALE;
-  r *= SCALE;
+function circle(x, y, r, t) {
+  x = (x + noise(t * 256 +  0) * STROKE) * SCALE;
+  y = (y + noise(t * 256 + 47) * STROKE) * SCALE;
+  r = r * (1 + noise(t * 256 + 117) * (1 / 3)) * SCALE;
 
   const min_u = constrain(Math.floor(x - r), 0, ID.width);
   const min_v = constrain(Math.floor(y - r), 0, ID.height);
@@ -42,16 +70,21 @@ function circle(x, y, r) {
 }
 
 function line(x1, y1, x2, y2) {
+  next();
+
   const n = Math.ceil(Math.hypot(x2 - x1, y2 - y1) * 2 * SCALE);
 
   for(let i = 0; i < n; i++) {
-    circle(x1 + (x2 - x1) * (i / n), y1 + (y2 - y1) * (i / n), STROKE);
+    const t = i / n;
+    circle(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t, STROKE, t);
   }
 }
 
 function arc(x1, y1, x2, y2, r) {
+  next();
+
   if(x1 === x2 && y1 === y2) {
-    circle(x1 * SCALE, y1 * SCALE, STROKE * SCALE);
+    circle(x1 * SCALE, y1 * SCALE, STROKE * SCALE, 0);
     return;
   }
 
@@ -78,9 +111,10 @@ function arc(x1, y1, x2, y2, r) {
   const n = Math.ceil((t2 - t1) * r * 2 * SCALE);
 
   for(let i = 0; i < n; i++) {
-    const t = t1 + (t2 - t1) * (i / n);
+    const t = i / n;
+    const tn = t1 + (t2 - t1) * t;
 
-    circle(xc + Math.cos(t) * r, yc - Math.sin(t) * r, STROKE);
+    circle(xc + Math.cos(tn) * r, yc - Math.sin(tn) * r, STROKE, t);
   }
 }
 
