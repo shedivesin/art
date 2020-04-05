@@ -39,7 +39,7 @@ function constrain(x, min, max) {
   return (x > min)? ((x < max)? x: max): min;
 }
 
-function circle(x, y, z) {
+function dot(x, y, z) {
   x = (x + noise(z, 0) * STROKE) * SCALE;
   y = (y + noise(z, 1) * STROKE) * SCALE;
 
@@ -67,13 +67,13 @@ function line(x1, y1, x2, y2, z1, z2) {
 
   for(let i = 0; i < n; i++) {
     const t = i / n;
-    circle(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t, z1 + (z2 - z1) * t);
+    dot(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t, z1 + (z2 - z1) * t);
   }
 }
 
 function arc(x1, y1, x2, y2, r, z1, z2) {
   if(x1 === x2 && y1 === y2) {
-    circle(x1, y1, z1);
+    dot(x1, y1, z1);
     return;
   }
 
@@ -103,7 +103,17 @@ function arc(x1, y1, x2, y2, r, z1, z2) {
     const t = i / n;
     const tn = t1 + (t2 - t1) * t;
 
-    circle(xc + Math.cos(tn) * r, yc - Math.sin(tn) * r, z1 + (z2 - z1) * t);
+    dot(xc + Math.cos(tn) * r, yc - Math.sin(tn) * r, z1 + (z2 - z1) * t);
+  }
+}
+
+function circle(x, y, r) {
+  const n = Math.ceil(r * 4 * Math.PI * SCALE);
+
+  for(let i = 0; i < n; i++) {
+    const t = i / n;
+
+    dot(x + Math.cos(t * 2 * Math.PI) * r, y - Math.sin(t * 2 * Math.PI) * r, t);
   }
 }
 
@@ -124,8 +134,7 @@ arc(1, 8, 5, 8, 2, 0, 0.5);
 arc(5, 8, 1, 8, 2.5, 0.5, 1);
 
 next();
-arc(1, 13, 5, 13, 2, 0, 0.5);
-arc(5, 13, 1, 13, 2, 0.5, 1);
+circle(3, 13, 2);
 
 next();
 arc(5, 18, 1, 18, 2, 0, 0.5);
