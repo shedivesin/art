@@ -1,0 +1,113 @@
+<!doctype html>
+<canvas></canvas>
+<script>
+"use strict";
+const WIDTH = 6;
+const HEIGHT = 26;
+const STROKE = 1/14;
+const SCALE = 24;
+
+const CANVAS = document.getElementsByTagName("canvas")[0];
+CANVAS.width = WIDTH * SCALE;
+CANVAS.height = HEIGHT * SCALE;
+
+const CONTEXT = CANVAS.getContext("2d");
+const ID = CONTEXT.getImageData(0, 0, CANVAS.width, CANVAS.height);
+
+function constrain(x, min, max) {
+  return (x > min)? ((x < max)? x: max): min;
+}
+
+function circle(x, y, r) {
+  x *= SCALE;
+  y *= SCALE;
+  r *= SCALE;
+
+  const min_u = constrain(Math.floor(x - r), 0, ID.width);
+  const min_v = constrain(Math.floor(y - r), 0, ID.height);
+  const max_u = constrain(Math.ceil(x + r), 0, ID.width);
+  const max_v = constrain(Math.ceil(y + r), 0, ID.height);
+
+  for(let v = min_v; v < max_v; v++) {
+    const dv = v + 0.5 - y;
+
+    for(let u = min_u; u < max_u; u++) {
+      const du = u + 0.5 - x;
+
+      if(du * du + dv * dv <= r * r) {
+        ID.data[(v * ID.width + u) * 4 + 3] = 255;
+      }
+    }
+  }
+}
+
+function line(x1, y1, x2, y2) {
+  const n = Math.ceil(Math.hypot(x2 - x1, y2 - y1) * 2 * SCALE);
+
+  for(let i = 0; i < n; i++) {
+    circle(x1 + (x2 - x1) * (i / n), y1 + (y2 - y1) * (i / n), STROKE);
+  }
+}
+
+function arc(x1, y1, x2, y2, r) {
+  if(x1 === x2 && y1 === y2) {
+    circle(x1 * SCALE, y1 * SCALE, STROKE * SCALE);
+    return;
+  }
+
+  const x = (x2 - x1) * 0.5;
+  const y = (y2 - y1) * 0.5;
+  const d = Math.sqrt(x * x + y * y);
+  if(d > r) {
+    return;
+  }
+
+  const m = Math.sqrt(r * r - d * d) / d;
+  const u = y * m;
+  const v = x * m;
+
+  const s = Math.sign((x - u) * (y - v) - (y + v) * (x + u));
+  const xc = x1 + x - u * s;
+  const yc = y1 + y + v * s;
+
+  const t1 = Math.atan2(yc - y1, x1 - xc);
+
+  let t2 = Math.atan2(yc - y2, x2 - xc);
+  if(t2 < t1) { t2 += 2 * Math.PI; }
+
+  const n = Math.ceil((t2 - t1) * r * 2 * SCALE);
+
+  for(let i = 0; i < n; i++) {
+    const t = t1 + (t2 - t1) * (i / n);
+
+    circle(xc + Math.cos(t) * r, yc - Math.sin(t) * r, STROKE);
+  }
+}
+
+function done() {
+  CONTEXT.putImageData(ID, 0, 0);
+}
+
+arc(1, 1, 5, 1, 2);
+arc(1, 1, 5, 1, 2.5);
+
+arc(1, 4, 5, 4, 2);
+line(1, 4, 5, 4);
+
+arc(1, 8, 5, 8, 2);
+arc(5, 8, 1, 8, 2.5);
+
+arc(1, 13, 5, 13, 2);
+arc(5, 13, 1, 13, 2);
+
+arc(5, 18, 1, 18, 2);
+arc(1, 18, 5, 18, 2.5);
+
+arc(5, 22, 1, 22, 2);
+line(5, 22, 1, 22);
+
+arc(5, 25, 1, 25, 2);
+arc(5, 25, 1, 25, 2.5);
+
+done();
+</script>
