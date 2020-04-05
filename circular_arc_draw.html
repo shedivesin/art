@@ -8,30 +8,23 @@ const STROKE = 1/14;
 const SCALE = 24;
 
 
-const ENTROPY = new Uint8Array(256);
+const ENTROPY = new Uint8Array(16 * 3);
 
 function next() {
   crypto.getRandomValues(ENTROPY);
 }
 
-function lerp(a, b, t) {
-  return a + (b - a) * t;
-}
+function noise(t, i) {
+  i = (Math.round(i) % 3) * 16;
 
-function octave(t) {
-  const x = Math.floor(t);
-  return lerp(ENTROPY[x & 255], ENTROPY[(x + 1) & 255], t - x) * (2 / 255) - 1;
-}
-
-function noise(t) {
-  return octave(t * (1 /   1) +  3) * (  1 / 255) +
-         octave(t * (1 /   2) +  5) * (  2 / 255) +
-         octave(t * (1 /   4) +  7) * (  4 / 255) +
-         octave(t * (1 /   8) + 11) * (  8 / 255) +
-         octave(t * (1 /  16) + 13) * ( 16 / 255) +
-         octave(t * (1 /  32) + 17) * ( 32 / 255) +
-         octave(t * (1 /  64) + 19) * ( 64 / 255) +
-         octave(t * (1 / 128) + 23) * (128 / 255);
+  return Math.sin((t + ENTROPY[i +  0] * (1 / 256)) * (  2 * Math.PI)) * (ENTROPY[i +  1] * (1 / 256)) * (128 / 255) +
+         Math.sin((t + ENTROPY[i +  2] * (1 / 256)) * (  4 * Math.PI)) * (ENTROPY[i +  3] * (1 / 256)) * ( 64 / 255) +
+         Math.sin((t + ENTROPY[i +  4] * (1 / 256)) * (  8 * Math.PI)) * (ENTROPY[i +  5] * (1 / 256)) * ( 32 / 255) +
+         Math.sin((t + ENTROPY[i +  6] * (1 / 256)) * ( 16 * Math.PI)) * (ENTROPY[i +  7] * (1 / 256)) * ( 16 / 255) +
+         Math.sin((t + ENTROPY[i +  8] * (1 / 256)) * ( 32 * Math.PI)) * (ENTROPY[i +  9] * (1 / 256)) * (  8 / 255) +
+         Math.sin((t + ENTROPY[i + 10] * (1 / 256)) * ( 64 * Math.PI)) * (ENTROPY[i + 11] * (1 / 256)) * (  4 / 255) +
+         Math.sin((t + ENTROPY[i + 12] * (1 / 256)) * (128 * Math.PI)) * (ENTROPY[i + 13] * (1 / 256)) * (  2 / 255) +
+         Math.sin((t + ENTROPY[i + 14] * (1 / 256)) * (256 * Math.PI)) * (ENTROPY[i + 15] * (1 / 256)) * (  1 / 255);
 }
 
 
@@ -46,11 +39,11 @@ function constrain(x, min, max) {
   return (x > min)? ((x < max)? x: max): min;
 }
 
-function circle(x, y, r, t) {
-  x = (x + noise(t * 256 +  0) * STROKE) * SCALE;
-  y = (y + noise(t * 256 + 47) * STROKE) * SCALE;
-  r = r * (1 + noise(t * 256 + 117) * (1 / 3)) * SCALE;
+function circle(x, y, z) {
+  x = (x + noise(z, 0) * STROKE) * SCALE;
+  y = (y + noise(z, 1) * STROKE) * SCALE;
 
+  const r = (1 + noise(z, 2) * 0.5) * STROKE * SCALE;
   const min_u = constrain(Math.floor(x - r), 0, ID.width);
   const min_v = constrain(Math.floor(y - r), 0, ID.height);
   const max_u = constrain(Math.ceil(x + r), 0, ID.width);
@@ -69,22 +62,18 @@ function circle(x, y, r, t) {
   }
 }
 
-function line(x1, y1, x2, y2) {
-  next();
-
+function line(x1, y1, x2, y2, z1, z2) {
   const n = Math.ceil(Math.hypot(x2 - x1, y2 - y1) * 2 * SCALE);
 
   for(let i = 0; i < n; i++) {
     const t = i / n;
-    circle(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t, STROKE, t);
+    circle(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t, z1 + (z2 - z1) * t);
   }
 }
 
-function arc(x1, y1, x2, y2, r) {
-  next();
-
+function arc(x1, y1, x2, y2, r, z1, z2) {
   if(x1 === x2 && y1 === y2) {
-    circle(x1 * SCALE, y1 * SCALE, STROKE * SCALE, 0);
+    circle(x1, y1, z1);
     return;
   }
 
@@ -114,7 +103,7 @@ function arc(x1, y1, x2, y2, r) {
     const t = i / n;
     const tn = t1 + (t2 - t1) * t;
 
-    circle(xc + Math.cos(tn) * r, yc - Math.sin(tn) * r, STROKE, t);
+    circle(xc + Math.cos(tn) * r, yc - Math.sin(tn) * r, z1 + (z2 - z1) * t);
   }
 }
 
@@ -122,26 +111,33 @@ function done() {
   CONTEXT.putImageData(ID, 0, 0);
 }
 
-arc(1, 1, 5, 1, 2);
-arc(1, 1, 5, 1, 2.5);
+next();
+arc(1, 1, 5, 1, 2, 0, 0.5);
+arc(1, 1, 5, 1, 2.5, 0.5, 1);
 
-arc(1, 4, 5, 4, 2);
-line(1, 4, 5, 4);
+next();
+arc(1, 4, 5, 4, 2, 0, 0.5);
+line(1, 4, 5, 4, 0.5, 1);
 
-arc(1, 8, 5, 8, 2);
-arc(5, 8, 1, 8, 2.5);
+next();
+arc(1, 8, 5, 8, 2, 0, 0.5);
+arc(5, 8, 1, 8, 2.5, 0.5, 1);
 
-arc(1, 13, 5, 13, 2);
-arc(5, 13, 1, 13, 2);
+next();
+arc(1, 13, 5, 13, 2, 0, 0.5);
+arc(5, 13, 1, 13, 2, 0.5, 1);
 
-arc(5, 18, 1, 18, 2);
-arc(1, 18, 5, 18, 2.5);
+next();
+arc(5, 18, 1, 18, 2, 0, 0.5);
+arc(1, 18, 5, 18, 2.5, 0.5, 1);
 
-arc(5, 22, 1, 22, 2);
-line(5, 22, 1, 22);
+next();
+arc(5, 22, 1, 22, 2, 0, 0.5);
+line(5, 22, 1, 22, 0.5, 1);
 
-arc(5, 25, 1, 25, 2);
-arc(5, 25, 1, 25, 2.5);
+next();
+arc(5, 25, 1, 25, 2, 0, 0.5);
+arc(5, 25, 1, 25, 2.5, 0.5, 1);
 
 done();
 </script>
