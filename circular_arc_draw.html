@@ -5,7 +5,8 @@
 const WIDTH = 6;
 const HEIGHT = 26;
 const STROKE = 1/14;
-const SCALE = 24;
+const SCALE = 96;
+const SUBPIXELS = 4;
 
 
 const ENTROPY = new Uint8Array(16 * 3);
@@ -31,6 +32,7 @@ function noise(t, i) {
 const CANVAS = document.getElementsByTagName("canvas")[0];
 CANVAS.width = WIDTH * SCALE;
 CANVAS.height = HEIGHT * SCALE;
+CANVAS.style = `width: ${WIDTH * SCALE / SUBPIXELS}px; height: ${HEIGHT * SCALE / SUBPIXELS}px`;
 
 const CONTEXT = CANVAS.getContext("2d");
 const ID = CONTEXT.getImageData(0, 0, CANVAS.width, CANVAS.height);
