@@ -5,10 +5,12 @@
 "use strict";
 
 
+// general purpose graphics programming tools
 function lerp(a, b, t) { return a + (b - a) * t; }
 function constrain(t, min, max) { return (t > min)? ((t < max)? t: max): min; }
 
 
+// generate cyclic fractal noise from a random source
 function noise(t, entropy) {
   const n = entropy.length >> 1;
   let sum = 0;
@@ -25,10 +27,13 @@ function noise(t, entropy) {
 }
 
 
+// generate a random source three times the desired size...
 const entropy = new Uint16Array(96);
 function reset() { crypto.getRandomValues(entropy); }
 
 
+// ...since we'll be breaking it up into three random sources and hardwiring
+// them into three cyclic fractal noise functions
 const entropy_x = new Uint16Array(entropy.buffer, entropy.byteOffset +  0, 32);
 const entropy_y = new Uint16Array(entropy.buffer, entropy.byteOffset + 32, 32);
 const entropy_z = new Uint16Array(entropy.buffer, entropy.byteOffset + 64, 32);
@@ -37,6 +42,7 @@ function noise_y(t) { return noise(t, entropy_y); }
 function noise_z(t) { return noise(t, entropy_z); }
 
 
+// draw a circular dot at <x,y> with radius z with random noise parameter w
 function dot(id, x, y, z, w) {
   x = z * noise_x(w) + x;
   y = z * noise_y(w) + y;
@@ -65,6 +71,9 @@ function dot(id, x, y, z, w) {
   }
 }
 
+// draw an circular arc with radius r from <x1,y1> to <x2,y2>, with stroke
+// radius linearly interpolating from z1 to z2, and noise parameter linearly
+// interpolating from w1 to w2, along the arc
 function arc(id, x1, y1, z1, w1, x2, y2, z2, w2, r) {
   if(x1 === x2 && y1 === y2) {
     return;
@@ -80,13 +89,11 @@ function arc(id, x1, y1, z1, w1, x2, y2, z2, w2, r) {
   const m = Math.sqrt(r * r - d * d) / d;
   const u = y * m;
   const v = x * m;
-
   const s = Math.sign((x - u) * (y - v) - (y + v) * (x + u));
   const xc = x1 + x - u * s;
   const yc = y1 + y + v * s;
 
   const a1 = Math.atan2(yc - y1, x1 - xc);
-
   let a2 = Math.atan2(yc - y2, x2 - xc);
   if(a2 < a1) { a2 += 2 * Math.PI; }
 
@@ -107,6 +114,7 @@ function arc(id, x1, y1, z1, w1, x2, y2, z2, w2, r) {
 }
 
 
+// draw something!
 const s = 24;
 const canvas = document.getElementsByTagName("canvas")[0];
 canvas.width = 6*s;
