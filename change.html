@@ -65,24 +65,44 @@ function dot(id, x, y, z, w) {
   }
 }
 
-function line(id, x1, y1, z1, w1, x2, y2, z2, w2) {
-  const n = Math.ceil(Math.hypot(x2 - x1, y2 - y1));
-
-  for(let i = 0; i < n; i++) {
-    const t = i / n;
-
-    dot(id, lerp(x1, x2, t), lerp(y1, y2, t), lerp(z1, z2, t), lerp(w1, w2, t));
+function arc(id, x1, y1, z1, w1, x2, y2, z2, w2, r) {
+  if(x1 === x2 && y1 === y2) {
+    return;
   }
-}
 
-function ellipse(id, x, y, rx, ry, a1, z1, w1, a2, z2, w2) {
-  const n = Math.ceil((2 * Math.PI) * Math.abs(a2 - a1) * Math.max(rx, ry));
+  const x = (x2 - x1) * 0.5;
+  const y = (y2 - y1) * 0.5;
+  const d = Math.hypot(x, y);
+  if(d > r) {
+    return;
+  }
+
+  const m = Math.sqrt(r * r - d * d) / d;
+  const u = y * m;
+  const v = x * m;
+
+  const s = Math.sign((x - u) * (y - v) - (y + v) * (x + u));
+  const xc = x1 + x - u * s;
+  const yc = y1 + y + v * s;
+
+  const a1 = Math.atan2(yc - y1, x1 - xc);
+
+  let a2 = Math.atan2(yc - y2, x2 - xc);
+  if(a2 < a1) { a2 += 2 * Math.PI; }
+
+  const n = Math.ceil(Math.hypot((a2 - a1) * r, z2 - z1));
 
   for(let i = 0; i < n; i++) {
     const t = i / n;
-    const a = (2 * Math.PI) * lerp(a1, a2, t);
+    const a = lerp(a1, a2, t);
 
-    dot(id, x + Math.sin(a) * rx, y - Math.cos(a) * ry, lerp(z1, z2, t), lerp(w1, w2, t));
+    dot(
+      id,
+      xc + r * Math.cos(a),
+      yc - r * Math.sin(a),
+      lerp(z1, z2, t),
+      lerp(w1, w2, t),
+    );
   }
 }
 
@@ -95,31 +115,32 @@ const ctx = canvas.getContext("2d");
 const id = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
 reset();
-ellipse(id, 3*s, 1*s, 2*s, 2*s, 0.25, s/14, 0.0, 0.75, s/14, 0.5);
-ellipse(id, 3*s, 1*s, 2*s, 1*s, 0.25, s/14, 1.0, 0.75, s/14, 0.5);
+arc(id, 1*s, 1*s, s/14, 0.0, 5*s, 1*s, s/14, 0.5, 2.0*s);
+arc(id, 1*s, 1*s, s/14, 1.0, 5*s, 1*s, s/14, 0.5, 2.5*s);
 
 reset();
-ellipse(id, 3*s, 4*s, 2*s, 2*s, 0.25, s/14, 0.0, 0.75, s/14, 0.5);
-line(id, 1*s, 4*s, s/14, 0.5, 5*s, 4*s, s/14, 1.0);
+arc(id, 1*s, 4*s, s/14, 0.0, 5*s, 4*s, s/14, 0.5, 2.0*s);
+arc(id, 1*s, 4*s, s/14, 1.0, 5*s, 4*s, s/14, 0.5, 99999*s);
 
 reset();
-ellipse(id, 3*s, 8*s, 2*s, 2*s, 0.25, s/14, 0.0, 0.75, s/14, 0.5);
-ellipse(id, 3*s, 8*s, 2*s, 1*s, 0.75, s/14, 0.5, 1.25, s/14, 1.0);
+arc(id, 1*s, 8*s, s/14, 0.0, 5*s, 8*s, s/14, 0.5, 2.0*s);
+arc(id, 5*s, 8*s, s/14, 0.5, 1*s, 8*s, s/14, 1.0, 2.5*s);
 
 reset();
-ellipse(id, 3*s, 13*s, 2*s, 2*s, 0, s/14, 0, 1, s/14, 1);
+arc(id, 1*s, 13*s, s/14, 0.0, 5*s, 13*s, s/14, 0.5, 2.0*s);
+arc(id, 5*s, 13*s, s/14, 0.5, 1*s, 13*s, s/14, 1.0, 2.0*s);
 
 reset();
-ellipse(id, 3*s, 18*s, 2*s, 1*s, 0.25, s/14, 0.0, 0.75, s/14, 0.5);
-ellipse(id, 3*s, 18*s, 2*s, 2*s, 0.75, s/14, 0.5, 1.25, s/14, 1.0);
+arc(id, 1*s, 18*s, s/14, 0.0, 5*s, 18*s, s/14, 0.5, 2.5*s);
+arc(id, 5*s, 18*s, s/14, 0.5, 1*s, 18*s, s/14, 1.0, 2.0*s);
 
 reset();
-ellipse(id, 3*s, 22*s, 2*s, 2*s, 0.75, s/14, 0.0, 1.25, s/14, 0.5);
-line(id, 1*s, 22*s, s/14, 1.0, 5*s, 22*s, s/14, 0.5);
+arc(id, 1*s, 22*s, s/14, 0.0, 5*s, 22*s, s/14, 0.5, 99999*s);
+arc(id, 5*s, 22*s, s/14, 0.5, 1*s, 22*s, s/14, 1.0, 2.0*s);
 
 reset();
-ellipse(id, 3*s, 25*s, 2*s, 2*s, 0.75, s/14, 0.0, 1.25, s/14, 0.5);
-ellipse(id, 3*s, 25*s, 2*s, 1*s, 0.75, s/14, 1.0, 1.25, s/14, 0.5);
+arc(id, 5*s, 25*s, s/14, 0.0, 1*s, 25*s, s/14, 0.5, 2.0*s);
+arc(id, 5*s, 25*s, s/14, 1.0, 1*s, 25*s, s/14, 0.5, 2.5*s);
 
 ctx.putImageData(id, 0, 0);
 </script>
