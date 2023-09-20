@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="324" height="336">
+  <defs>
+    <g id="0"><g id="w"><path id="u" d="m0 6 6-6a17 17 0 0024 0l6 6-6 6a17 17 0 00-24 0"/><use href="#u" y="12"/></g><use href="#w" y="24"/></g>
+    <g id="1"><g id="x"><path id="v" d="m12 6 6-6 6 6-6 6" fill="crimson"/><use href="#u" y="12"/></g><use href="#w" y="24"/></g>
+    <g id="2"><g id="y"><use href="#u"/><use href="#v" y="12"/></g><use href="#w" y="24"/></g>
+    <g id="3"><g id="z"><use href="#v"/><use href="#v" y="12"/></g><use href="#w" y="24"/></g>
+    <g id="4"><use href="#w"/><use href="#x" y="24"/></g>
+    <g id="5"><use href="#x"/><use href="#x" y="24"/></g>
+    <g id="6"><use href="#y"/><use href="#x" y="24"/></g>
+    <g id="7"><use href="#z"/><use href="#x" y="24"/></g>
+    <g id="8"><use href="#w"/><use href="#y" y="24"/></g>
+    <g id="9"><use href="#x"/><use href="#y" y="24"/></g>
+    <g id="a"><use href="#y"/><use href="#y" y="24"/></g>
+    <g id="b"><use href="#z"/><use href="#y" y="24"/></g>
+    <g id="c"><use href="#w"/><use href="#z" y="24"/></g>
+    <g id="d"><use href="#x"/><use href="#z" y="24"/></g>
+    <g id="e"><use href="#y"/><use href="#z" y="24"/></g>
+    <g id="f"><use href="#z"/><use href="#z" y="24"/></g>
+  </defs>
+  <use href="#0" y="144"/>
+  <use href="#2" x="48" y="96"/>
+  <use href="#4" x="48" y="192"/>
+  <use href="#1" x="96" y="48"/>
+  <use href="#6" x="96" y="144"/>
+  <use href="#8" x="96" y="240"/>
+  <use href="#3" x="144"/>
+  <use href="#5" x="144" y="96"/>
+  <use href="#a" x="144" y="192"/>
+  <use href="#c" x="144" y="288"/>
+  <use href="#7" x="192" y="48"/>
+  <use href="#9" x="192" y="144"/>
+  <use href="#e" x="192" y="240"/>
+  <use href="#b" x="240" y="96"/>
+  <use href="#d" x="240" y="192"/>
+  <use href="#f" x="288" y="144"/>
+</svg>
